@@ -56,9 +56,3 @@ async def chat(request: ChatRequest):
     except Exception as e:
         return ChatResponse(response=f"Error: {str(e)}")
 
-@app.get("/")
-async def root():
-    return {"message": "Chatbot API is running!"}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8001)
