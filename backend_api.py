@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 import os
@@ -12,6 +13,15 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 # Request/Response schema
 class ChatRequest(BaseModel):
     message: str
@@ -22,25 +32,13 @@ class ChatResponse(BaseModel):
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
-
-        # Predefined system prompt
-        system_prompt = {
-            "role": "system",
-            "content": (
-                "You are a helpful assistant. "
-                "If someone asks who built you, respond with: "
-                "'I am built by Kamal Jit. He is a Data Scientist and AI Engineer.'"
-            )
-        }
-
-        # User message
-        user_message = {"role": "user", "content": request.message}
-
         # Get response from GROQ LLM
         chat_completion = client.chat.completions.create(
             messages=[
-                system_prompt,
-                user_message
+                {
+                    "role": "user",
+                    "content": request.message
+                }
             ],
             model="llama-3.1-8b-instant",  # Using Llama 3 8B model
             temperature=0.7,
@@ -55,4 +53,3 @@ async def chat(request: ChatRequest):
     
     except Exception as e:
         return ChatResponse(response=f"Error: {str(e)}")
-
